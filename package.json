@@ -1,0 +1,47 @@
+{
+  "name": "reddit-dataviz-battle-2019-04",
+  "description": "Visualization for the data visualization battle of April 2019 (dataisbeautiful subreddit)",
+  "author": "jackdbd <jackdebidda@gmail.com> (http://www.giacomodebidda.com/)",
+  "repository": "git@github.com:jackdbd/d3-visualizations.git",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "babel": "babel --plugins @babel/plugin-syntax-dynamic-import src/js/index.js",
+    "build": "yarn lint && yarn format && tsc && webpack --config webpack.prod.js --progress",
+    "ci": "yarn test && yarn coverage && yarn build",
+    "clean": "rimraf build",
+    "coverage": "codecov",
+    "deploy": "gh-pages -d build",
+    "dev": "webpack-dev-server --config webpack.dev.js",
+    "format": "prettier --write '{,!(node_modules)/}**/*.{js,jsx,ts,tsx}'",
+    "lint": "yarn lint:css && yarn lint:js && yarn lint:ts",
+    "lint:css": "stylelint --config .stylelintrc.json --formatter verbose './src/**/*.{css,js,jsx,ts,tsx}'",
+    "lint:js": "eslint src/js --fix",
+    "lint:ts": "tslint --config tslint.json --project tsconfig.json",
+    "ncu": "ncu",
+    "ncuu": "ncu --upgrade",
+    "nuke": "rimraf node_modules && rm yarn.lock",
+    "predeploy": "yarn clean && yarn build",
+    "start": "node src/index.js",
+    "static": "chromium-browser build/index.html",
+    "stats": "webpack-bundle-analyzer build/stats.json --port 8888",
+    "test": "jest --verbose",
+    "wallace": "wallace https://projectwallace.com --format=json"
+  },
+  "dependencies": {
+    "chalk": "^2.4.2",
+    "pending-xhr-puppeteer": "^2.0.0",
+    "puppeteer": "^1.14.0"
+  },
+  "devDependencies": {
+    "npm-check-updates": "3.1.8",
+    "prettier": "1.17.0"
+  },
+  "keywords": [
+    "dataisbeautiful",
+    "reddit",
+    "visualizations"
+  ]
+}

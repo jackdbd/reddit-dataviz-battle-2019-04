@@ -1,3 +1,5 @@
 yarn-error.log
 
+build/
+images/
 node_modules/
