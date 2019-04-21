@@ -1,148 +1,181 @@
 import fetch from 'cross-fetch';
-import { extent, max } from 'd3-array';
+import { max, min, range } from 'd3-array';
 import { axisBottom, axisLeft } from 'd3-axis';
-// import { format } from 'd3-format';
-import { scaleLinear } from 'd3-scale';
+import { easeLinear } from 'd3-ease';
+import { scaleBand, scaleLinear } from 'd3-scale';
 import { select, selectAll } from 'd3-selection';
+import { transition } from 'd3-transition';
 import { encaseP, tryP } from 'fluture';
-// import { timeYears } from 'd3-time';
-// import { timeParse } from 'd3-time-format';
-// import { transition } from 'd3-transition';
-// import * as Future from 'fluture';
-// import { displayError } from '../utils';
+
 import '../css/viz.css';
 
-select('#dataWord').on('click', function(d, i) {
-  console.warn('clicked', d, i);
-});
+const NUM_SAMPLES = 10;
 
-select('#comments').on('click', function(d, i) {
-  console.warn('clicked', d, i);
-});
+const mouseover = (d, i, nodes) => {
+  console.warn(d, i, nodes);
+  const selection = select(nodes[i]);
+  selection.classed('bar--highlighted', true);
+};
 
-select('#upvotes').on('click', function(d, i) {
-  console.warn('clicked', d, i);
-});
+const mouseoutTransition = transition('mouseout-transition')
+  .duration(750)
+  .ease(easeLinear);
 
-select('#upvotesPercentage').on('click', (d, i) => {
-  console.warn('clicked', d, i);
-});
+const mouseout = (d, i, nodes) => {
+  const selection = select(nodes[i]);
+  selection.transition(mouseoutTransition); // or 'mouseout-transition'
+  selection.classed('bar--highlighted', false);
+};
 
-function draw(selector, dataset) {
-  const gdp = dataset.data.map(x => x[1]);
+const prepareChart = selector => {
   const margin = {
     top: 20,
     right: 20,
     bottom: 30,
     left: 100,
   };
+
   const width = 960 - margin.left - margin.right;
   const height = 500 - margin.top - margin.bottom;
-
-  // const parseTime = timeParse('%Y-%m-%d');
-  // const dates = dataset.data.map(x => parseTime(x[0]));
-
-  const xScale = scaleLinear()
-    .domain(extent([0, 1, 4, 6, 8]))
-    .range([0, width]);
-
-  const yScale = scaleLinear()
-    .domain([0, max(gdp, d => d)])
-    .range([height, 0]);
-
-  // const months = [
-  //   'January',
-  //   'February',
-  //   'March',
-  //   'April',
-  //   'May',
-  //   'June',
-  //   'July',
-  //   'August',
-  //   'September',
-  //   'October',
-  //   'November',
-  //   'December',
-  // ];
-
-  // const formatCurrency = format('$,.2f');
-
-  // const tooltip = selectAll(selector)
-  //   .append('div')
-  //   .attr('class', styles.tooltip)
-  //   .style('opacity', 0);
-
-  // const mouseover = d => {
-  //   tooltip
-  //     .transition()
-  //     .duration(200)
-  //     .style('opacity', 0.9);
-  //   const currentDateTime = new Date(d[0]);
-  //   const year = currentDateTime.getFullYear();
-  //   const month = currentDateTime.getMonth();
-  //   const dollars = d[1];
-  //   const html = `<span>${formatCurrency(dollars)} Billion</span><br>
-  //       <span>${year} - ${months[month]}</span>`;
-  //   tooltip
-  //     .html(html)
-  //     .style('left', `${event.layerX}px`)
-  //     .style('top', `${event.layerY - 28}px`);
-  // };
-
-  const xAxis = axisBottom().scale(xScale);
-  // .tickValues(timeYears(dates[0], dates[dates.length - 1], 5));
-
-  const yAxis = axisLeft()
-    .scale(yScale)
-    .ticks(10, '');
-  //   .tickFormat(format('.0s'));
 
   const svg = selectAll(selector)
     .append('svg')
     .attr('width', width + margin.left + margin.right)
-    .attr('height', height + margin.top + margin.bottom)
+    .attr('height', height + margin.top + margin.bottom);
+
+  const chart = svg
     .append('g')
     .attr('class', 'viz')
     .attr('transform', `translate(${margin.left}, ${margin.right})`);
 
-  svg
+  return { chart, width, height };
+};
+
+const redrawChart = (chart, width, height, datasets, chosenDataset) => {
+  const data = datasets[chosenDataset];
+
+  const { xScale, yScale } = updateScales(data, width, height);
+
+  const xAxis = axisBottom().scale(xScale);
+  const yAxis = axisLeft().scale(yScale);
+  // .tickValues([]);
+
+  const axisX = chart
     .append('g')
     .attr('class', 'axis-x')
     .attr('transform', `translate(0, ${height})`)
-    .call(xAxis);
+    .call(xAxis)
+    .append('text')
+    .attr('x', width)
+    .attr('dy', '-0.5em')
+    .style('text-anchor', 'end')
+    .text(`${chosenDataset}`);
 
-  svg
+  const axisY = chart
     .append('g')
     .attr('class', 'axis-y')
-    .call(yAxis)
-    .append('text')
-    .attr('transform', 'rotate(-90)')
-    .attr('y', 6)
-    .attr('dy', '.71em')
-    .style('text-anchor', 'end')
-    .text('Gross Domestic Product, USA ($ Billion)');
+    .call(yAxis);
 
-  svg
+  const bars = chart
+    .append('g')
+    .attr('class', 'bars')
     .selectAll('.bar')
-    .data(dataset.data)
+    .data(data);
+
+  bars
     .enter()
     .append('rect')
     .attr('class', 'bar')
-    // .attr('x', d => xScale(new Date(d[0])))
-    .attr('x', (d, i) => xScale(i))
-    // .attr('width', xScale.bandwidth())
-    .attr('width', 20)
-    // .attr('width', width / dates.length + 1)
-    .attr('y', d => yScale(d[1]))
-    .attr('height', d => height - yScale(d[1]));
-  // .on('mouseover', mouseover)
-  // .on('mouseout', () =>
-  //   tooltip
-  //     .transition()
-  //     .duration(500)
-  //     .style('opacity', 0)
-  // );
-}
+    .attr('x', 0)
+    .attr('width', d => xScale(d))
+    .attr('y', (d, i) => yScale(i))
+    .attr('height', yScale.bandwidth())
+    .on('mouseover', mouseover)
+    .on('mouseout', mouseout);
+
+  bars
+    .exit()
+    .transition()
+    .duration(300)
+    .attr('width', 0)
+    .remove();
+};
+
+const makeDatasets = fetchedData => {
+  const comments = fetchedData.map(d => d.comments);
+  const dataOccurrences = fetchedData.map(d => d.dataOccurrences);
+  const uniqueUsers = fetchedData.map(d => d.uniqueUsers);
+  const upvotes = fetchedData.map(d => d.upvotes);
+
+  const entry0 = {
+    name: 'Comment',
+    count: comments.length,
+    min: min(comments),
+    max: max(comments),
+  };
+  const entry1 = {
+    name: 'Data',
+    count: dataOccurrences.length,
+    min: min(dataOccurrences),
+    max: max(dataOccurrences),
+  };
+  const entry2 = {
+    name: 'Upvotes',
+    count: upvotes.length,
+    min: min(upvotes),
+    max: max(upvotes),
+  };
+
+  console.table([entry0, entry1, entry2], ['name', 'count', 'min', 'max']);
+
+  const datasets = {
+    comments,
+    dataOccurrences,
+    uniqueUsers,
+    upvotes,
+  };
+
+  return datasets;
+};
+
+const updateScales = (data, width, height) => {
+  const xScale = scaleLinear()
+    .domain([0, max(data)])
+    .range([0, width]);
+
+  const yScale = scaleBand()
+    .domain(range(NUM_SAMPLES))
+    .range([height, 0])
+    .paddingInner(0.05);
+
+  return {
+    xScale,
+    yScale,
+  };
+};
+
+const draw = (selector, fetchedData) => {
+  const datasets = makeDatasets(fetchedData);
+  const { chart, width, height } = prepareChart(selector);
+
+  redrawChart(chart, width, height, datasets, 'dataOccurrences');
+
+  select('#dataWord').on('click', (d, i) => {
+    redrawChart(chart, width, height, datasets, 'dataOccurrences');
+  });
+
+  select('#comments').on('click', (d, i) => {
+    redrawChart(chart, width, height, datasets, 'comments');
+  });
+
+  select('#upvotes').on('click', (d, i) => {
+    redrawChart(chart, width, height, datasets, 'upvotes');
+  });
+
+  select('#upvotesPercentage').on('click', (d, i) => {
+    redrawChart(chart, width, height, datasets, 'upvotesPercentage');
+  });
+};
 
 export const fn = async (selector, url) => {
   const drawBounded = draw.bind(this, selector);
