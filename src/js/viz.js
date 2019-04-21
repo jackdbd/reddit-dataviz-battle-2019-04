@@ -3,7 +3,7 @@ import { extent, max } from 'd3-array';
 import { axisBottom, axisLeft } from 'd3-axis';
 // import { format } from 'd3-format';
 import { scaleLinear } from 'd3-scale';
-import { selectAll } from 'd3-selection';
+import { select, selectAll } from 'd3-selection';
 import { encaseP, tryP } from 'fluture';
 // import { timeYears } from 'd3-time';
 // import { timeParse } from 'd3-time-format';
@@ -11,6 +11,22 @@ import { encaseP, tryP } from 'fluture';
 // import * as Future from 'fluture';
 // import { displayError } from '../utils';
 import '../css/viz.css';
+
+select('#dataWord').on('click', function(d, i) {
+  console.warn('clicked', d, i);
+});
+
+select('#comments').on('click', function(d, i) {
+  console.warn('clicked', d, i);
+});
+
+select('#upvotes').on('click', function(d, i) {
+  console.warn('clicked', d, i);
+});
+
+select('#upvotesPercentage').on('click', (d, i) => {
+  console.warn('clicked', d, i);
+});
 
 function draw(selector, dataset) {
   const gdp = dataset.data.map(x => x[1]);

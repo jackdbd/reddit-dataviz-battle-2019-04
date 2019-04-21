@@ -4,6 +4,8 @@ Code for the Reddit dataisbeautiful [DataViz Battle for the Month of April 2019]
 
 Visualize the April Fool's Prank for 2019-04-01 on /r/DataIsBeautiful.
 
+Here is the [viz](https://jackdbd.github.io/reddit-dataviz-battle-2019-04/).
+
 ## Installation
 
 ```sh
