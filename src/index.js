@@ -1,9 +1,14 @@
+const { writeFile } = require('fs');
 const { resolve } = require('path');
+const { promisify } = require('util');
 const chalk = require('chalk');
 const puppeteer = require('puppeteer');
 const { PendingXHR } = require('pending-xhr-puppeteer');
 
+const writeFileAsync = promisify(writeFile);
+
 const IMAGES_DIR = resolve(__dirname, '..', 'images');
+const DATA_DIR = resolve(__dirname, '..', 'data');
 
 // https://pptr.dev/#?product=Puppeteer&version=v1.14.0&show=api-puppeteerlaunchoptions
 const launchOptions = {
@@ -26,9 +31,25 @@ const doPage = async (page, url, i) => {
   console.log(`URL ${i + 1}: ${chalk.green(url)}`);
 
   const response = await page.goto(url, gotoOptions);
+
+  // UNfortunately, this does not seem to work...
+  page.on('dialog', async dialog => {
+    console.log('--- DIALOG ---', dialog.message());
+    await dialog.dismiss();
+  });
+
   const title = await page.$eval('h2', el => el.innerText);
 
-  // const elementHandle = await page.$('div[data-test-id]');
+  // await page.waitFor(10000);
+
+  // Note: not all pages have the "View all [number] replies" button
+  // const jsHandle = await page.waitForXPath(
+  //   '//button[contains(text(),"View all")]'
+  // );
+  // const elementHandle = jsHandle.asElement();
+
+  // await elementHandle.focus();
+  // await elementHandle.click();
 
   /**
    * Evaluate a function in a browser execution environment.
@@ -57,9 +78,9 @@ const doPage = async (page, url, i) => {
       return allUsers.indexOf(elem) == pos;
     });
 
-    const selector4 =
+    const selector3 =
       'div[data-test-id="post-content"] a[href^="http://i.imgur.com/"]';
-    const anchorElem = document.querySelector(selector4);
+    const anchorElem = document.querySelector(selector3);
 
     let imageUrl;
     if (anchorElem) {
@@ -68,9 +89,20 @@ const doPage = async (page, url, i) => {
       imageUrl = undefined;
     }
 
+    const xPathExpression = 'count(//*[contains(text(),"Data")])';
+    const xPathResult = document.evaluate(
+      xPathExpression,
+      document,
+      null,
+      XPathResult.NUMBER_TYPE,
+      null
+    );
+    const numData = xPathResult.numberValue;
+
     return {
       comments,
       imageUrl,
+      numData,
       uniqueUsers,
       upvotes,
     };
@@ -79,6 +111,7 @@ const doPage = async (page, url, i) => {
   console.log(`
   Comments: ${chalk.yellow(data.comments)}
   Imgur image: ${chalk.yellow(data.imageUrl)}
+  Occurrences of "Data": ${chalk.yellow(data.numData)}
   Users with 1+ comments: ${chalk.green(data.uniqueUsers)}
   Upvotes: ${chalk.yellow(data.upvotes)}
   `);
@@ -95,6 +128,7 @@ const doPage = async (page, url, i) => {
   }
 
   const result = {
+    data,
     'response-status': response.status(),
     title,
     url,
@@ -117,14 +151,25 @@ const fn = async () => {
   });
 
   console.log(chalk.green(`Found ${threadUrls.length} Thread URLs`));
-  // const urls = threadUrls.filter((d, i) => i < 10);
+  // const urls = threadUrls.filter((d, i) => i === 0 || i === 566);
   const urls = threadUrls;
 
+  const dataEntries = [];
   for (let i = 0; i < urls.length; i++) {
-    await doPage(page, urls[i], i);
+    const result = await doPage(page, urls[i], i);
+    dataEntries.push(result.data);
   }
 
   await browser.close();
+
+  const jsonString = JSON.stringify(dataEntries);
+  const filePath = `${DATA_DIR}/data.json`;
+
+  try {
+    await writeFileAsync(filePath, jsonString, { encoding: 'utf8' });
+  } catch (err) {
+    console.error('An error occured while writing the JSON File.');
+  }
 };
 
 fn();
