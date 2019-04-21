@@ -2,11 +2,18 @@
   fill: blue;
 }
 
+.bar--highlighted {
+  fill: white;
+  outline: 5px solid blue;
+}
+
 .viz {
   outline: 3px solid darkgray;
 }
 
 .axis-x {
+  font-family: lobster;
+  font-size: 1.5rem;
   stroke: black;
 }
 
