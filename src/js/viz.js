@@ -11,15 +11,15 @@ import '../css/viz.css';
 
 const NUM_SAMPLES = 10;
 
+const mouseoutTransition = transition('mouseout-transition')
+  .duration(750)
+  .ease(easeLinear);
+
 const mouseover = (d, i, nodes) => {
   console.warn(d, i, nodes);
   const selection = select(nodes[i]);
   selection.classed('bar--highlighted', true);
 };
-
-const mouseoutTransition = transition('mouseout-transition')
-  .duration(750)
-  .ease(easeLinear);
 
 const mouseout = (d, i, nodes) => {
   const selection = select(nodes[i]);
@@ -51,6 +51,22 @@ const prepareChart = selector => {
   return { chart, width, height };
 };
 
+const updateScales = (data, width, height) => {
+  const xScale = scaleLinear()
+    .domain([0, max(data)])
+    .range([0, width]);
+
+  const yScale = scaleBand()
+    .domain(range(NUM_SAMPLES))
+    .range([height, 0])
+    .paddingInner(0.05);
+
+  return {
+    xScale,
+    yScale,
+  };
+};
+
 const redrawChart = (chart, width, height, datasets, chosenDataset) => {
   const data = datasets[chosenDataset];
 
@@ -60,7 +76,7 @@ const redrawChart = (chart, width, height, datasets, chosenDataset) => {
   const yAxis = axisLeft().scale(yScale);
   // .tickValues([]);
 
-  const axisX = chart
+  chart
     .append('g')
     .attr('class', 'axis-x')
     .attr('transform', `translate(0, ${height})`)
@@ -71,7 +87,7 @@ const redrawChart = (chart, width, height, datasets, chosenDataset) => {
     .style('text-anchor', 'end')
     .text(`${chosenDataset}`);
 
-  const axisY = chart
+  chart
     .append('g')
     .attr('class', 'axis-y')
     .call(yAxis);
@@ -138,22 +154,6 @@ const makeDatasets = fetchedData => {
   return datasets;
 };
 
-const updateScales = (data, width, height) => {
-  const xScale = scaleLinear()
-    .domain([0, max(data)])
-    .range([0, width]);
-
-  const yScale = scaleBand()
-    .domain(range(NUM_SAMPLES))
-    .range([height, 0])
-    .paddingInner(0.05);
-
-  return {
-    xScale,
-    yScale,
-  };
-};
-
 const draw = (selector, fetchedData) => {
   const datasets = makeDatasets(fetchedData);
   const { chart, width, height } = prepareChart(selector);
@@ -161,18 +161,19 @@ const draw = (selector, fetchedData) => {
   redrawChart(chart, width, height, datasets, 'dataOccurrences');
 
   select('#dataWord').on('click', (d, i) => {
+    console.log('clicked #dataWord', d, i);
     redrawChart(chart, width, height, datasets, 'dataOccurrences');
   });
 
-  select('#comments').on('click', (d, i) => {
+  select('#comments').on('click', () => {
     redrawChart(chart, width, height, datasets, 'comments');
   });
 
-  select('#upvotes').on('click', (d, i) => {
+  select('#upvotes').on('click', () => {
     redrawChart(chart, width, height, datasets, 'upvotes');
   });
 
-  select('#upvotesPercentage').on('click', (d, i) => {
+  select('#upvotesPercentage').on('click', () => {
     redrawChart(chart, width, height, datasets, 'upvotesPercentage');
   });
 };
