@@ -167,8 +167,8 @@ const fn = async () => {
   const threadUrls = await page.$eval('pre', el => el.innerHTML.split('\n'));
 
   console.log(chalk.green(`Found ${threadUrls.length} Thread URLs`));
-  const urls = threadUrls.filter((d, i) => i < 3 || i === 566);
-  // const urls = threadUrls;
+  // const urls = threadUrls.filter((d, i) => i < 3 || i === 566);
+  const urls = threadUrls;
 
   const dataEntries = [];
   for (let i = 0; i < urls.length; i += 1) {

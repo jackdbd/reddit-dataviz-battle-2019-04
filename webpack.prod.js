@@ -1,13 +1,18 @@
 const merge = require('webpack-merge');
 const common = require('./webpack.common.js');
 const CompressionPlugin = require('compression-webpack-plugin');
+const WebpackDeepScopeAnalysisPlugin = require('webpack-deep-scope-plugin')
+  .default;
 const TerserPlugin = require('terser-webpack-plugin');
 
-const compressionPlugin = new CompressionPlugin({
-  algorithm: 'gzip',
-  cache: true,
-  minRatio: 0.8,
-});
+const plugins = [
+  new CompressionPlugin({
+    algorithm: 'gzip',
+    cache: true,
+    minRatio: 0.8,
+  }),
+  new WebpackDeepScopeAnalysisPlugin(),
+];
 
 const optimization = {
   minimizer: [
@@ -48,7 +53,7 @@ const config = (env, argv) => {
     devtool: 'cheap-module-source-map',
     mode,
     optimization,
-    plugins: [compressionPlugin],
+    plugins,
   });
 };
 
