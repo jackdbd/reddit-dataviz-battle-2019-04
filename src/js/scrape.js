@@ -107,8 +107,8 @@ const doPage = async (page, url, i) => {
       imageUrl = undefined;
     }
 
-    const xPathExpression = 'count(//*[contains(text(),"Data")])';
-    const xPathResult = document.evaluate(
+    let xPathExpression = 'count(//*[contains(text(),"Data")])';
+    let xPathResult = document.evaluate(
       xPathExpression,
       document,
       null,
@@ -117,12 +117,25 @@ const doPage = async (page, url, i) => {
     );
     const dataOccurrences = xPathResult.numberValue;
 
+    xPathExpression =
+      '//div[@data-test-id="post-content"]//span[contains(text(),"% Upvoted")]';
+    xPathResult = document.evaluate(
+      xPathExpression,
+      document,
+      null,
+      XPathResult.ANY_TYPE,
+      null
+    );
+    const span = xPathResult.iterateNext();
+    const upvotesPercentage = parseInt(span.innerText.split('%')[0], 10);
+
     return {
       comments,
       imageUrl,
       dataOccurrences,
       uniqueUsers,
       upvotes,
+      upvotesPercentage,
     };
   });
 
@@ -132,6 +145,7 @@ const doPage = async (page, url, i) => {
   Occurrences of the word "Data": ${chalk.yellow(data.dataOccurrences)}
   Users with 1+ comments: ${chalk.green(data.uniqueUsers)}
   Upvotes: ${chalk.yellow(data.upvotes)}
+  Upvote Percentage: ${chalk.yellow(data.upvotesPercentage)}
   `);
 
   if (data.imageUrl) {
@@ -147,6 +161,7 @@ const doPage = async (page, url, i) => {
 
   const result = {
     data,
+    postId,
     'response-status': response.status(),
     title,
     url,
@@ -170,16 +185,27 @@ const fn = async () => {
   // const urls = threadUrls.filter((d, i) => i < 3 || i === 566);
   const urls = threadUrls;
 
-  const dataEntries = [];
+  const entries = [];
   for (let i = 0; i < urls.length; i += 1) {
     // eslint-disable-next-line no-await-in-loop
     const result = await doPage(page, urls[i], i);
-    dataEntries.push(result.data);
+    const entry = {
+      comments: result.data.comments,
+      dataOccurrences: result.data.dataOccurrences,
+      imageUrl: result.data.imageUrl,
+      postId: result.postId,
+      title: result.title,
+      uniqueUsers: result.data.uniqueUsers,
+      upvotes: result.data.upvotes,
+      upvotesPercentage: result.data.upvotesPercentage,
+      url: result.url,
+    };
+    entries.push(entry);
   }
 
   await browser.close();
 
-  const jsonString = JSON.stringify(dataEntries);
+  const jsonString = JSON.stringify(entries);
   const filePath = `${DATA_DIR}/data.json`;
 
   try {
