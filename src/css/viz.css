@@ -1,0 +1,15 @@
+.bar {
+  fill: blue;
+}
+
+.viz {
+  outline: 3px solid darkgray;
+}
+
+.axis-x {
+  stroke: black;
+}
+
+.axis-y {
+  stroke: black;
+}

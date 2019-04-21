@@ -7,8 +7,8 @@ const { PendingXHR } = require('pending-xhr-puppeteer');
 
 const writeFileAsync = promisify(writeFile);
 
-const IMAGES_DIR = resolve(__dirname, '..', 'images');
-const DATA_DIR = resolve(__dirname, '..', 'data');
+const IMAGES_DIR = resolve(__dirname, '..', '..', 'images');
+const DATA_DIR = resolve(__dirname, '..', '..', 'data');
 
 // https://pptr.dev/#?product=Puppeteer&version=v1.14.0&show=api-puppeteerlaunchoptions
 const launchOptions = {
@@ -60,23 +60,41 @@ const doPage = async (page, url, i) => {
    * @see https://pptr.dev/#?product=Puppeteer&version=v1.14.0&show=api-pageevaluatepagefunction-args
    */
   const data = await page.evaluate(() => {
+    /**
+     * Utility function to sanitize a string and parse it.
+     *
+     * This function cannot be defined outside of this evaluate function because
+     * here we are in a browser executution, while outside we are in a Node.js
+     * execution context.
+     */
+    const parseString = str => {
+      const strSanitized = str.replace(',', '').replace('k', '000');
+      const num = parseInt(strSanitized, 10);
+      return num;
+    };
+
     const selector0 = 'div[data-test-id="post-content"] i.icon-comment+span';
-    const comments = document.querySelector(selector0).innerText.split(' ')[0];
+    const commentsStr = document
+      .querySelector(selector0)
+      .innerText.split(' ')[0];
+    const comments = parseString(commentsStr);
 
     const selector1 = 'div[data-test-id="post-content"] button+div';
-    const upvotes = document.querySelector(selector1).innerText;
+    const upvotesStr = document.querySelector(selector1).innerText;
+    const upvotes = parseString(upvotesStr);
 
     const selector2 = 'a[href^="/user/"]';
     const nodeList = document.querySelectorAll(selector2);
 
-    let allUsers = [];
+    const allUsers = [];
+    // eslint-disable-next-line no-restricted-syntax
     for (const n of nodeList) {
       allUsers.push(n.innerText);
     }
 
-    const uniqueUsers = allUsers.filter((elem, pos) => {
-      return allUsers.indexOf(elem) == pos;
-    });
+    const uniqueUsers = allUsers.filter(
+      (elem, pos) => allUsers.indexOf(elem) === pos
+    );
 
     const selector3 =
       'div[data-test-id="post-content"] a[href^="http://i.imgur.com/"]';
@@ -97,12 +115,12 @@ const doPage = async (page, url, i) => {
       XPathResult.NUMBER_TYPE,
       null
     );
-    const numData = xPathResult.numberValue;
+    const dataOccurrences = xPathResult.numberValue;
 
     return {
       comments,
       imageUrl,
-      numData,
+      dataOccurrences,
       uniqueUsers,
       upvotes,
     };
@@ -111,7 +129,7 @@ const doPage = async (page, url, i) => {
   console.log(`
   Comments: ${chalk.yellow(data.comments)}
   Imgur image: ${chalk.yellow(data.imageUrl)}
-  Occurrences of "Data": ${chalk.yellow(data.numData)}
+  Occurrences of the word "Data": ${chalk.yellow(data.dataOccurrences)}
   Users with 1+ comments: ${chalk.green(data.uniqueUsers)}
   Upvotes: ${chalk.yellow(data.upvotes)}
   `);
@@ -146,16 +164,15 @@ const fn = async () => {
   );
   await pendingXHR.waitForAllXhrFinished();
 
-  const threadUrls = await page.$eval('pre', el => {
-    return el.innerHTML.split('\n');
-  });
+  const threadUrls = await page.$eval('pre', el => el.innerHTML.split('\n'));
 
   console.log(chalk.green(`Found ${threadUrls.length} Thread URLs`));
-  // const urls = threadUrls.filter((d, i) => i === 0 || i === 566);
-  const urls = threadUrls;
+  const urls = threadUrls.filter((d, i) => i < 3 || i === 566);
+  // const urls = threadUrls;
 
   const dataEntries = [];
-  for (let i = 0; i < urls.length; i++) {
+  for (let i = 0; i < urls.length; i += 1) {
+    // eslint-disable-next-line no-await-in-loop
     const result = await doPage(page, urls[i], i);
     dataEntries.push(result.data);
   }
