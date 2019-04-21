@@ -1,5 +1,5 @@
 import fetch from 'cross-fetch';
-import { max, min, range } from 'd3-array';
+import { descending, max, min, range } from 'd3-array';
 import { axisBottom, axisLeft } from 'd3-axis';
 import { easeLinear } from 'd3-ease';
 import { scaleBand, scaleLinear } from 'd3-scale';
@@ -16,23 +16,27 @@ const mouseoutTransition = transition('mouseout-transition')
   .ease(easeLinear);
 
 const mouseover = (d, i, nodes) => {
-  console.warn(d, i, nodes);
   const selection = select(nodes[i]);
   selection.classed('bar--highlighted', true);
 };
 
 const mouseout = (d, i, nodes) => {
   const selection = select(nodes[i]);
-  selection.transition(mouseoutTransition); // or 'mouseout-transition'
+
+  // or 'mouseout-transition'
+  selection.transition(mouseoutTransition);
   selection.classed('bar--highlighted', false);
 };
 
+/**
+ * Prepare the SVG elements and return d3 selections.
+ */
 const prepareChart = selector => {
   const margin = {
     top: 20,
     right: 20,
     bottom: 30,
-    left: 100,
+    left: 200,
   };
 
   const width = 960 - margin.left - margin.right;
@@ -46,11 +50,25 @@ const prepareChart = selector => {
   const chart = svg
     .append('g')
     .attr('class', 'viz')
-    .attr('transform', `translate(${margin.left}, ${margin.right})`);
+    .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
-  return { chart, width, height };
+  // We append the group for the bars before the group for the x axis, so the x
+  // label will always be in foreground.
+  const barsGroup = chart.append('g').attr('class', 'bars');
+
+  const axisX = chart
+    .append('g')
+    .attr('class', 'axis axis-x')
+    .attr('transform', `translate(0, ${height})`);
+
+  const axisY = chart.append('g').attr('class', 'axis axis-y');
+
+  return { axisX, axisY, barsGroup, chart, height, width };
 };
 
+/**
+ * Update the scales, that depend on the dataset, width and height.
+ */
 const updateScales = (data, width, height) => {
   const xScale = scaleLinear()
     .domain([0, max(data)])
@@ -58,7 +76,7 @@ const updateScales = (data, width, height) => {
 
   const yScale = scaleBand()
     .domain(range(NUM_SAMPLES))
-    .range([height, 0])
+    .range([0, height])
     .paddingInner(0.05);
 
   return {
@@ -67,44 +85,76 @@ const updateScales = (data, width, height) => {
   };
 };
 
-const redrawChart = (chart, width, height, datasets, chosenDataset) => {
-  const data = datasets[chosenDataset];
+const updateAxes = (
+  xScale,
+  axisX,
+  yScale,
+  axisY,
+  chosenDataset,
+  width,
+  height
+) => {
+  const xAxisFn = axisBottom().scale(xScale);
+  axisX.call(xAxisFn);
 
-  const { xScale, yScale } = updateScales(data, width, height);
+  const text = axisX.selectAll('text').data([1]);
 
-  const xAxis = axisBottom().scale(xScale);
-  const yAxis = axisLeft().scale(yScale);
-  // .tickValues([]);
-
-  chart
-    .append('g')
-    .attr('class', 'axis-x')
-    .attr('transform', `translate(0, ${height})`)
-    .call(xAxis)
+  text
+    .enter()
     .append('text')
+    .merge(text)
+    .attr('class', 'axis-x-text')
     .attr('x', width)
     .attr('dy', '-0.5em')
     .style('text-anchor', 'end')
-    .text(`${chosenDataset}`);
+    .text(chosenDataset);
 
-  chart
-    .append('g')
-    .attr('class', 'axis-y')
-    .call(yAxis);
+  // TODO: use different classes for different topics (e.g. comments vs upvotes)
 
-  const bars = chart
-    .append('g')
-    .attr('class', 'bars')
-    .selectAll('.bar')
-    .data(data);
+  // TODO: fix transitions
+
+  // TODO: ticks for yAxis. Update tick values from chosen dataset
+  const values = 'abcdefghij'.split('');
+  const yAxisFn = axisLeft()
+    .scale(yScale)
+    .tickValues(values);
+
+  const barHeight = height / NUM_SAMPLES; // not exactly, there is also the padding;
+
+  axisY
+    .call(yAxisFn)
+    .selectAll('.tick')
+    .attr(
+      'transform',
+      (d, i) => `translate(0, ${i * barHeight + barHeight / 2})`
+    );
+};
+
+const drawChart = (selections, width, height, datasets, chosenDataset) => {
+  const data = datasets[chosenDataset]
+    .sort(descending)
+    .filter((_, i) => i < NUM_SAMPLES);
+
+  const { xScale, yScale } = updateScales(data, width, height);
+  const { axisX, axisY, barsGroup } = selections;
+
+  updateAxes(xScale, axisX, yScale, axisY, chosenDataset, width, height);
+
+  // data binding
+  const bars = barsGroup.selectAll('.bar').data(data);
+
+  // TODO: use different classes for different topics (e.g. comments vs upvotes)
+
+  // TODO: fix transitions
 
   bars
     .enter()
     .append('rect')
-    .attr('class', 'bar')
+    .merge(bars)
+    .attr('class', `bar ${chosenDataset}`)
     .attr('x', 0)
     .attr('width', d => xScale(d))
-    .attr('y', (d, i) => yScale(i))
+    .attr('y', (_, i) => yScale(i))
     .attr('height', yScale.bandwidth())
     .on('mouseover', mouseover)
     .on('mouseout', mouseout);
@@ -156,26 +206,28 @@ const makeDatasets = fetchedData => {
 
 const draw = (selector, fetchedData) => {
   const datasets = makeDatasets(fetchedData);
-  const { chart, width, height } = prepareChart(selector);
-
-  redrawChart(chart, width, height, datasets, 'dataOccurrences');
+  const { axisX, axisY, barsGroup, chart, height, width } = prepareChart(
+    selector
+  );
+  const selections = { axisX, axisY, barsGroup, chart };
 
   select('#dataWord').on('click', (d, i) => {
-    console.log('clicked #dataWord', d, i);
-    redrawChart(chart, width, height, datasets, 'dataOccurrences');
+    drawChart(selections, width, height, datasets, 'dataOccurrences');
   });
 
   select('#comments').on('click', () => {
-    redrawChart(chart, width, height, datasets, 'comments');
+    drawChart(selections, width, height, datasets, 'comments');
   });
 
   select('#upvotes').on('click', () => {
-    redrawChart(chart, width, height, datasets, 'upvotes');
+    drawChart(selections, width, height, datasets, 'upvotes');
   });
 
   select('#upvotesPercentage').on('click', () => {
-    redrawChart(chart, width, height, datasets, 'upvotesPercentage');
+    drawChart(selections, width, height, datasets, 'upvotesPercentage');
   });
+
+  drawChart(selections, width, height, datasets, 'dataOccurrences');
 };
 
 export const fn = async (selector, url) => {

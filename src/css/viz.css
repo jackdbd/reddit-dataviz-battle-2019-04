@@ -1,3 +1,7 @@
+svg {
+  border: 1px solid red;
+}
+
 .bar {
   fill: blue;
 }
@@ -7,16 +11,35 @@
   outline: 5px solid blue;
 }
 
+.bar:hover {
+  fill: yellow;
+}
+
+.comments {
+  fill: red;
+}
+
+.upvotes {
+  fill: purple;
+}
+
+.dataOccurrences {
+  fill: green;
+}
+
 .viz {
   outline: 3px solid darkgray;
 }
 
-.axis-x {
+.axis {
   font-family: lobster;
-  font-size: 1.5rem;
   stroke: black;
 }
 
+.axis-x {
+  font-size: 1.5rem;
+}
+
 .axis-y {
-  stroke: black;
+  font-size: 1.5rem;
 }
