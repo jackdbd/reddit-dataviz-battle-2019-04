@@ -33,7 +33,7 @@ const doPage = async (page, url, i) => {
   const response = await page.goto(url, gotoOptions);
 
   // UNfortunately, this does not seem to work...
-  page.on('dialog', async dialog => {
+  page.on('dialog', async (dialog) => {
     console.log('--- DIALOG ---', dialog.message());
     await dialog.dismiss();
   });
@@ -67,7 +67,7 @@ const doPage = async (page, url, i) => {
      * here we are in a browser executution, while outside we are in a Node.js
      * execution context.
      */
-    const parseString = str => {
+    const parseString = (str) => {
       const strSanitized = str.replace(',', '').replace('k', '000');
       const num = parseInt(strSanitized, 10);
       return num;
@@ -93,11 +93,10 @@ const doPage = async (page, url, i) => {
     }
 
     const uniqueUsers = allUsers.filter(
-      (elem, pos) => allUsers.indexOf(elem) === pos
+      (elem, pos) => allUsers.indexOf(elem) === pos,
     );
 
-    const selector3 =
-      'div[data-test-id="post-content"] a[href^="http://i.imgur.com/"]';
+    const selector3 = 'div[data-test-id="post-content"] a[href^="http://i.imgur.com/"]';
     const anchorElem = document.querySelector(selector3);
 
     let imageUrl;
@@ -113,18 +112,17 @@ const doPage = async (page, url, i) => {
       document,
       null,
       XPathResult.NUMBER_TYPE,
-      null
+      null,
     );
     const dataOccurrences = xPathResult.numberValue;
 
-    xPathExpression =
-      '//div[@data-test-id="post-content"]//span[contains(text(),"% Upvoted")]';
+    xPathExpression = '//div[@data-test-id="post-content"]//span[contains(text(),"% Upvoted")]';
     xPathResult = document.evaluate(
       xPathExpression,
       document,
       null,
       XPathResult.ANY_TYPE,
-      null
+      null,
     );
     const span = xPathResult.iterateNext();
     const upvotesPercentage = parseInt(span.innerText.split('%')[0], 10);
@@ -175,7 +173,7 @@ const fn = async () => {
   const pendingXHR = new PendingXHR(page);
   await page.goto(urlLinks, gotoOptions);
   console.log(
-    `There are still ${pendingXHR.pendingXhrCount()} XHR pending requests.`
+    `There are still ${pendingXHR.pendingXhrCount()} XHR pending requests.`,
   );
   await pendingXHR.waitForAllXhrFinished();
 

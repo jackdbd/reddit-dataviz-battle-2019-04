@@ -1,7 +1,7 @@
 import fetch from 'cross-fetch';
 import { descending, max, min, range } from 'd3-array';
 import { axisBottom, axisLeft } from 'd3-axis';
-import { easeLinear, easeBounceIn } from 'd3-ease';
+import { easeLinear } from 'd3-ease';
 import { scaleBand, scaleLinear } from 'd3-scale';
 import { select, selectAll } from 'd3-selection';
 import { transition } from 'd3-transition';
@@ -69,7 +69,14 @@ const prepareChart = selector => {
 
   const axisY = chart.append('g').attr('class', 'axis axis-y');
 
-  return { axisX, axisY, barsGroup, chart, height, width };
+  return {
+    axisX,
+    axisY,
+    barsGroup,
+    chart,
+    height,
+    width,
+  };
 };
 
 /**
@@ -198,7 +205,7 @@ const drawChart = (selections, width, height, datasets, chosenDataset) => {
 
   const barsExit = barsUpdate.exit().merge(barsUpdate);
 
-  // console.log(barsExit);
+  console.log('barsTransition', barsTransition, 'barsExit', barsExit);
 };
 
 const makeDatasets = fetchedData => {
@@ -253,9 +260,14 @@ const draw = (selector, fetchedData) => {
   const { axisX, axisY, barsGroup, chart, height, width } = prepareChart(
     selector
   );
-  const selections = { axisX, axisY, barsGroup, chart };
+  const selections = {
+    axisX,
+    axisY,
+    barsGroup,
+    chart,
+  };
 
-  select('#dataWord').on('click', (d, i) => {
+  select('#dataWord').on('click', () => {
     drawChart(selections, width, height, datasets, 'dataOccurrences');
   });
 
