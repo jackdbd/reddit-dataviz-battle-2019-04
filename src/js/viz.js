@@ -1,7 +1,7 @@
 import fetch from 'cross-fetch';
 import { descending, max, min, range } from 'd3-array';
 import { axisBottom, axisLeft } from 'd3-axis';
-import { easeLinear } from 'd3-ease';
+import { easeLinear, easeBounceIn } from 'd3-ease';
 import { scaleBand, scaleLinear } from 'd3-scale';
 import { select, selectAll } from 'd3-selection';
 import { transition } from 'd3-transition';
@@ -11,20 +11,26 @@ import '../css/viz.css';
 
 const NUM_SAMPLES = 10;
 
-const mouseoutTransition = transition('mouseout-transition')
-  .duration(750)
+const easeLinear1000 = transition('ease-linear-1000')
+  .duration(1000)
   .ease(easeLinear);
+
+// transition a SVG rect to its final x, using a different duration each time.
+const transitionToFinalX = (_, i, nodes) => {
+  select(nodes[i])
+    .transition()
+    .duration(i * 100)
+    .attr('x', 0)
+    .style('opacity', 1);
+};
 
 const mouseover = (d, i, nodes) => {
   const selection = select(nodes[i]);
   selection.classed('bar--highlighted', true);
 };
 
-const mouseout = (d, i, nodes) => {
+const mouseout = (_, i, nodes) => {
   const selection = select(nodes[i]);
-
-  // or 'mouseout-transition'
-  selection.transition(mouseoutTransition);
   selection.classed('bar--highlighted', false);
 };
 
@@ -97,24 +103,39 @@ const updateAxes = (
   const xAxisFn = axisBottom().scale(xScale);
   axisX.call(xAxisFn);
 
-  const text = axisX.selectAll('text').data([1]);
+  const textUpdate = axisX.selectAll('text').data([1]);
 
-  text
+  const textEnter = textUpdate
     .enter()
     .append('text')
-    .merge(text)
-    .attr('class', 'axis-x-text')
+    .merge(textUpdate)
+    .attr('class', `axis-x-text ${chosenDataset}`)
     .attr('x', width)
-    .attr('dy', '-0.5em')
+    .attr('dy', '0em')
     .style('text-anchor', 'end')
+    .style('opacity', 0.25)
     .text(chosenDataset);
 
-  // TODO: use different classes for different topics (e.g. comments vs upvotes)
-
-  // TODO: fix transitions
+  textEnter
+    .transition()
+    .duration(500)
+    .ease(easeLinear)
+    .attr('dy', '-0.5em')
+    .style('opacity', 1);
 
   // TODO: ticks for yAxis. Update tick values from chosen dataset
-  const values = 'abcdefghij'.split('');
+  const values = [
+    'postId1',
+    'postId2',
+    'postId3',
+    'postId4',
+    'postId5',
+    'postId6',
+    'postId7',
+    'postId8',
+    'postId9',
+    'postId10',
+  ];
   const yAxisFn = axisLeft()
     .scale(yScale)
     .tickValues(values);
@@ -131,6 +152,8 @@ const updateAxes = (
 };
 
 const drawChart = (selections, width, height, datasets, chosenDataset) => {
+  // TODO: data should contain postId and the chosen dataset. Sort by the chosen
+  // dataset and keep the postId (i need it for the labels on the y axis).
   const data = datasets[chosenDataset]
     .sort(descending)
     .filter((_, i) => i < NUM_SAMPLES);
@@ -140,31 +163,42 @@ const drawChart = (selections, width, height, datasets, chosenDataset) => {
 
   updateAxes(xScale, axisX, yScale, axisY, chosenDataset, width, height);
 
-  // data binding
-  const bars = barsGroup.selectAll('.bar').data(data);
+  // join data, store update selection
+  const barsUpdate = barsGroup.selectAll('.bar').data(data);
 
-  // TODO: use different classes for different topics (e.g. comments vs upvotes)
-
-  // TODO: fix transitions
-
-  bars
+  const barsEnter = barsUpdate
     .enter()
     .append('rect')
-    .merge(bars)
-    .attr('class', `bar ${chosenDataset}`)
-    .attr('x', 0)
-    .attr('width', d => xScale(d))
+    .merge(barsUpdate)
+    .attr('x', width)
     .attr('y', (_, i) => yScale(i))
-    .attr('height', yScale.bandwidth())
+    .attr('height', yScale.bandwidth() / 2)
+    // gotcha: if you forget to assign the '.bar' class, each time you change
+    // dataset the class will change, resulting in an enter selection which will
+    // not merge with the update selection (so you'll end up with NUM_SAMPLES
+    // additional rect elements each time you change dataset, instead of
+    // replacing older rect elements with newer ones).
+    .attr('class', `bar ${chosenDataset}`)
+    .style('opacity', 0.25)
+    // event listeners must be attached on the enter selection
     .on('mouseover', mouseover)
     .on('mouseout', mouseout);
 
-  bars
-    .exit()
-    .transition()
-    .duration(300)
-    .attr('width', 0)
-    .remove();
+  const barsTransition = barsEnter
+    // transition each SVG rect to its final width and height, but yet not x.
+    .transition(easeLinear1000)
+    .attr('width', d => xScale(d))
+    .attr('height', yScale.bandwidth())
+    // when the previous transition ends, start a new transition
+    .on('end', transitionToFinalX);
+
+  // In the exit selection we don't have anything to remove because all our
+  // datasets have the same number of samples. Note that we still need to merge,
+  // otherwise the selection would be empty.
+
+  const barsExit = barsUpdate.exit().merge(barsUpdate);
+
+  // console.log(barsExit);
 };
 
 const makeDatasets = fetchedData => {
@@ -172,33 +206,43 @@ const makeDatasets = fetchedData => {
   const dataOccurrences = fetchedData.map(d => d.dataOccurrences);
   const uniqueUsers = fetchedData.map(d => d.uniqueUsers);
   const upvotes = fetchedData.map(d => d.upvotes);
+  const upvotesPercentage = fetchedData.map(d => d.upvotesPercentage);
 
-  const entry0 = {
-    name: 'Comment',
-    count: comments.length,
-    min: min(comments),
-    max: max(comments),
-  };
-  const entry1 = {
-    name: 'Data',
-    count: dataOccurrences.length,
-    min: min(dataOccurrences),
-    max: max(dataOccurrences),
-  };
-  const entry2 = {
-    name: 'Upvotes',
-    count: upvotes.length,
-    min: min(upvotes),
-    max: max(upvotes),
-  };
+  const entries = [
+    {
+      name: 'Comment',
+      count: comments.length,
+      min: min(comments),
+      max: max(comments),
+    },
+    {
+      name: 'Data',
+      count: dataOccurrences.length,
+      min: min(dataOccurrences),
+      max: max(dataOccurrences),
+    },
+    {
+      name: 'Upvotes',
+      count: upvotes.length,
+      min: min(upvotes),
+      max: max(upvotes),
+    },
+    {
+      name: 'UpvotesPercentage',
+      count: upvotesPercentage.length,
+      min: min(upvotesPercentage),
+      max: max(upvotesPercentage),
+    },
+  ];
 
-  console.table([entry0, entry1, entry2], ['name', 'count', 'min', 'max']);
+  console.table(entries, ['name', 'count', 'min', 'max']);
 
   const datasets = {
     comments,
     dataOccurrences,
     uniqueUsers,
     upvotes,
+    upvotesPercentage,
   };
 
   return datasets;

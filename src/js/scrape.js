@@ -145,7 +145,7 @@ const doPage = async (page, url, i) => {
   Occurrences of the word "Data": ${chalk.yellow(data.dataOccurrences)}
   Users with 1+ comments: ${chalk.green(data.uniqueUsers)}
   Upvotes: ${chalk.yellow(data.upvotes)}
-  Upvote Percentage: ${chalk.yellow(data.upvotesPercentage)}
+  Upvotes Percentage: ${chalk.yellow(data.upvotesPercentage)}
   `);
 
   if (data.imageUrl) {
