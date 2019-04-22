@@ -1,23 +1,54 @@
+svg {
+  border: 1px solid red;
+}
+
 .bar {
   fill: blue;
 }
 
 .bar--highlighted {
-  fill: white;
   outline: 5px solid blue;
+}
+
+.bar:hover {
+  fill: white;
+}
+
+.comments {
+  fill: red;
+}
+
+.upvotes {
+  fill: purple;
+}
+
+.upvotesPercentage {
+  fill: steelblue;
+}
+
+.dataOccurrences {
+  fill: green;
 }
 
 .viz {
   outline: 3px solid darkgray;
 }
 
-.axis-x {
+.axis {
   font-family: lobster;
-  font-size: 1.5rem;
   stroke: black;
 }
 
+.axis-x {
+  font-size: 1rem;
+}
+
 .axis-y {
+  font-size: 1rem;
+}
+
+.axis-x-text {
+  font-size: 2rem;
   stroke: black;
 }
 
