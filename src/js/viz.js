@@ -1,16 +1,24 @@
 import fetch from 'cross-fetch';
-import { descending, max, min, range } from 'd3-array';
+import { max, range } from 'd3-array';
 import { axisBottom, axisLeft } from 'd3-axis';
 import { easeLinear } from 'd3-ease';
 import { scaleBand, scaleLinear } from 'd3-scale';
 import { select, selectAll } from 'd3-selection';
 import { transition } from 'd3-transition';
 import { encaseP, tryP } from 'fluture';
-const R = require("ramda");
 
 import '../css/viz.css';
 
-const NUM_SAMPLES = 10;
+const R = require('ramda');
+
+const NUM_SAMPLES = 15;
+
+const margin = {
+  top: 20,
+  right: 20,
+  bottom: 30,
+  left: 200,
+};
 
 const easeLinear1000 = transition('ease-linear-1000')
   .duration(1000)
@@ -25,7 +33,7 @@ const transitionToFinalX = (_, i, nodes) => {
     .style('opacity', 1);
 };
 
-const mouseover = (d, i, nodes) => {
+const mouseover = (_, i, nodes) => {
   const selection = select(nodes[i]);
   selection.classed('bar--highlighted', true);
 };
@@ -39,20 +47,22 @@ const mouseout = (_, i, nodes) => {
  * Prepare the SVG elements and return d3 selections.
  */
 const prepareChart = selector => {
-  const margin = {
-    top: 20,
-    right: 20,
-    bottom: 30,
-    left: 200,
-  };
-
-  const width = 960 - margin.left - margin.right;
+  const heroBody = document.querySelector('.hero-body');
+  const width = heroBody.clientWidth - margin.left - margin.right;
+  // const height = heroBody.clientHeight - margin.top - margin.bottom;
   const height = 500 - margin.top - margin.bottom;
 
   const svg = selectAll(selector)
     .append('svg')
-    .attr('width', width + margin.left + margin.right)
-    .attr('height', height + margin.top + margin.bottom);
+    .attr(
+      'viewBox',
+      `0 0 ${width + margin.left + margin.right} ${height +
+        margin.top +
+        margin.bottom}`
+    )
+    .attr('preserveAspectRatio', 'xMinYMin meet');
+  // .attr('width', width + margin.left + margin.right)
+  // .attr('height', height + margin.top + margin.bottom);
 
   const chart = svg
     .append('g')
@@ -116,12 +126,12 @@ const updateAxes = (
   const xAxisFn = axisBottom().scale(xScale);
   axisX.call(xAxisFn);
 
-  const textUpdate = axisX.selectAll('text').data([1]);
+  const xAxisTextUpdate = axisX.selectAll('text').data([1]);
 
-  const textEnter = textUpdate
+  const xAxisTextEnter = xAxisTextUpdate
     .enter()
     .append('text')
-    .merge(textUpdate)
+    .merge(xAxisTextUpdate)
     .attr('class', `axis-x-text ${chosenDataset}`)
     .attr('x', width)
     .attr('dy', '0em')
@@ -129,7 +139,7 @@ const updateAxes = (
     .style('opacity', 0.25)
     .text(chosenDataset);
 
-  textEnter
+  xAxisTextEnter
     .transition()
     .duration(500)
     .ease(easeLinear)
@@ -147,29 +157,61 @@ const updateAxes = (
     .selectAll('.tick')
     .attr(
       'transform',
-      (d, i) => `translate(0, ${i * barHeight + barHeight / 2})`
+      (_, i) => `translate(0, ${i * barHeight + barHeight / 2})`
     );
+
+  const yAxisTextUpdate = axisY.selectAll('text').data([1]);
+
+  const yAxisTextEnter = yAxisTextUpdate
+    .enter()
+    .append('text')
+    .merge(yAxisTextUpdate)
+    .attr('class', 'axis-y-text')
+    .style('text-anchor', 'middle')
+    .style('opacity', '0.25')
+    .attr(
+      'transform',
+      `rotate(-90) translate(${-height / 2}, -${margin.left / 2})`
+    )
+    .text('Post ID');
+
+  yAxisTextEnter
+    .transition()
+    .duration(500)
+    .ease(easeLinear)
+    .style('opacity', 1);
 };
 
 const drawChart = (selections, width, height, fetchedData, chosenDataset) => {
-  const pickChosen = (d) => R.pick(['postId', chosenDataset], d)
-  const arrData = R.map(pickChosen, fetchedData)
-  const byChosen = R.descend(R.prop(chosenDataset))
-  const arr = R.sort(byChosen, arrData)
+  const pickChosen = d => R.pick(['postId', chosenDataset], d);
+  const arrData = R.map(pickChosen, fetchedData);
+  const byChosen = R.descend(R.prop(chosenDataset));
+  const arr = R.sort(byChosen, arrData);
 
   const data = arr.filter((_, i) => i < NUM_SAMPLES);
 
-  const renameKeys = R.curry((keysMap, obj) =>
-    R.reduce((acc, key) => R.assoc(keysMap[key] || key, obj[key], acc), {}, R.keys(obj))
-  );
+  const renameKeys = R.curry((keysMap, obj) => {
+    const fn = (acc, key) => R.assoc(keysMap[key] || key, obj[key], acc);
+    return R.reduce(fn, {}, R.keys(obj));
+  });
 
-  const renameDatum = (d) => renameKeys({ [chosenDataset]: 'x', 'postId': 'Post ID' }, d)
-  const dataRenamed = R.map(renameDatum, data)
+  const renameDatum = d =>
+    renameKeys({ [chosenDataset]: 'x', postId: 'Post ID' }, d);
+  const dataRenamed = R.map(renameDatum, data);
 
   const { xScale, yScale } = updateScales(dataRenamed, width, height);
   const { axisX, axisY, barsGroup } = selections;
 
-  updateAxes(xScale, axisX, yScale, axisY, chosenDataset, width, height, dataRenamed);
+  updateAxes(
+    xScale,
+    axisX,
+    yScale,
+    axisY,
+    chosenDataset,
+    width,
+    height,
+    dataRenamed
+  );
 
   // join data, store update selection
   const barsUpdate = barsGroup.selectAll('.bar').data(dataRenamed);
@@ -206,7 +248,7 @@ const drawChart = (selections, width, height, fetchedData, chosenDataset) => {
 
   const barsExit = barsUpdate.exit().merge(barsUpdate);
 
-  // console.log('barsTransition', barsTransition, 'barsExit', barsExit);
+  console.log('barsTransition', barsTransition, 'barsExit', barsExit);
 };
 
 const draw = (selector, fetchedData) => {
