@@ -17,7 +17,7 @@ const margin = {
   top: 20,
   right: 20,
   bottom: 30,
-  left: 200,
+  left: 100,
 };
 
 const easeLinear1000 = transition('ease-linear-1000')
@@ -168,7 +168,7 @@ const updateAxes = (
     .style('opacity', '0.25')
     .attr(
       'transform',
-      `rotate(-90) translate(${-height / 2}, -${margin.left / 2})`
+      `rotate(-90) translate(${-height / 2}, -${margin.left * 0.8})`
     )
     .text('Post ID');
 
