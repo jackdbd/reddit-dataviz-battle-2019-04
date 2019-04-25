@@ -98,5 +98,13 @@ p {
   stroke: black;
 }
 
+@media only screen and (max-width: 768px) {
+  .axis-x-text,
+  .axis-y-text {
+  font-size: 1.5rem;
+  stroke: black;
+}
+}
+
 
 /*# sourceMappingURL=index.css.map*/
