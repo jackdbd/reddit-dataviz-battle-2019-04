@@ -49,20 +49,17 @@ const mouseout = (_, i, nodes) => {
 const prepareChart = selector => {
   const heroBody = document.querySelector('.hero-body');
   const width = heroBody.clientWidth - margin.left - margin.right;
-  // const height = heroBody.clientHeight - margin.top - margin.bottom;
-  const height = 500 - margin.top - margin.bottom;
+  const height = heroBody.clientHeight - margin.top - margin.bottom;
+  const viewBox = `0 0 ${width + margin.left + margin.right} ${height +
+    margin.top +
+    margin.bottom}`;
 
   const svg = selectAll(selector)
     .append('svg')
-    .attr(
-      'viewBox',
-      `0 0 ${width + margin.left + margin.right} ${height +
-        margin.top +
-        margin.bottom}`
-    )
+    .attr('width', '100%')
+    .attr('height', '100%')
+    .attr('viewBox', viewBox)
     .attr('preserveAspectRatio', 'xMinYMin meet');
-  // .attr('width', width + margin.left + margin.right)
-  // .attr('height', height + margin.top + margin.bottom);
 
   const chart = svg
     .append('g')
