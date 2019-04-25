@@ -180,6 +180,13 @@ const updateAxes = (
     .duration(500)
     .ease(easeLinear)
     .style('opacity', 1);
+
+  selectAll('.axis-y > .tick')
+    .style('cursor', 'pointer')
+    .on('click', d => {
+      const href = `https://www.reddit.com/r/dataisbeautiful/comments/${d}/`;
+      window.open(href, '_blank');
+    });
 };
 
 const drawChart = (selections, width, height, fetchedData, chosenDataset) => {
