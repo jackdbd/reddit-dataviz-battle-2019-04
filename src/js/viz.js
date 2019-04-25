@@ -6,6 +6,7 @@ import { scaleBand, scaleLinear } from 'd3-scale';
 import { select, selectAll } from 'd3-selection';
 import { transition } from 'd3-transition';
 import { encaseP, tryP } from 'fluture';
+const R = require("ramda");
 
 import '../css/viz.css';
 
@@ -83,8 +84,10 @@ const prepareChart = selector => {
  * Update the scales, that depend on the dataset, width and height.
  */
 const updateScales = (data, width, height) => {
+  const xValues = R.pluck('x')(data);
+
   const xScale = scaleLinear()
-    .domain([0, max(data)])
+    .domain([0, max(xValues)])
     .range([0, width]);
 
   const yScale = scaleBand()
@@ -105,8 +108,11 @@ const updateAxes = (
   axisY,
   chosenDataset,
   width,
-  height
+  height,
+  data
 ) => {
+  const yValues = R.pluck('Post ID')(data);
+
   const xAxisFn = axisBottom().scale(xScale);
   axisX.call(xAxisFn);
 
@@ -130,22 +136,9 @@ const updateAxes = (
     .attr('dy', '-0.5em')
     .style('opacity', 1);
 
-  // TODO: ticks for yAxis. Update tick values from chosen dataset
-  const values = [
-    'postId1',
-    'postId2',
-    'postId3',
-    'postId4',
-    'postId5',
-    'postId6',
-    'postId7',
-    'postId8',
-    'postId9',
-    'postId10',
-  ];
   const yAxisFn = axisLeft()
     .scale(yScale)
-    .tickValues(values);
+    .tickValues(yValues);
 
   const barHeight = height / NUM_SAMPLES; // not exactly, there is also the padding;
 
@@ -158,20 +151,28 @@ const updateAxes = (
     );
 };
 
-const drawChart = (selections, width, height, datasets, chosenDataset) => {
-  // TODO: data should contain postId and the chosen dataset. Sort by the chosen
-  // dataset and keep the postId (i need it for the labels on the y axis).
-  const data = datasets[chosenDataset]
-    .sort(descending)
-    .filter((_, i) => i < NUM_SAMPLES);
+const drawChart = (selections, width, height, fetchedData, chosenDataset) => {
+  const pickChosen = (d) => R.pick(['postId', chosenDataset], d)
+  const arrData = R.map(pickChosen, fetchedData)
+  const byChosen = R.descend(R.prop(chosenDataset))
+  const arr = R.sort(byChosen, arrData)
 
-  const { xScale, yScale } = updateScales(data, width, height);
+  const data = arr.filter((_, i) => i < NUM_SAMPLES);
+
+  const renameKeys = R.curry((keysMap, obj) =>
+    R.reduce((acc, key) => R.assoc(keysMap[key] || key, obj[key], acc), {}, R.keys(obj))
+  );
+
+  const renameDatum = (d) => renameKeys({ [chosenDataset]: 'x', 'postId': 'Post ID' }, d)
+  const dataRenamed = R.map(renameDatum, data)
+
+  const { xScale, yScale } = updateScales(dataRenamed, width, height);
   const { axisX, axisY, barsGroup } = selections;
 
-  updateAxes(xScale, axisX, yScale, axisY, chosenDataset, width, height);
+  updateAxes(xScale, axisX, yScale, axisY, chosenDataset, width, height, dataRenamed);
 
   // join data, store update selection
-  const barsUpdate = barsGroup.selectAll('.bar').data(data);
+  const barsUpdate = barsGroup.selectAll('.bar').data(dataRenamed);
 
   const barsEnter = barsUpdate
     .enter()
@@ -194,7 +195,7 @@ const drawChart = (selections, width, height, datasets, chosenDataset) => {
   const barsTransition = barsEnter
     // transition each SVG rect to its final width and height, but yet not x.
     .transition(easeLinear1000)
-    .attr('width', d => xScale(d))
+    .attr('width', d => xScale(d.x))
     .attr('height', yScale.bandwidth())
     // when the previous transition ends, start a new transition
     .on('end', transitionToFinalX);
@@ -205,58 +206,10 @@ const drawChart = (selections, width, height, datasets, chosenDataset) => {
 
   const barsExit = barsUpdate.exit().merge(barsUpdate);
 
-  console.log('barsTransition', barsTransition, 'barsExit', barsExit);
-};
-
-const makeDatasets = fetchedData => {
-  const comments = fetchedData.map(d => d.comments);
-  const dataOccurrences = fetchedData.map(d => d.dataOccurrences);
-  const uniqueUsers = fetchedData.map(d => d.uniqueUsers);
-  const upvotes = fetchedData.map(d => d.upvotes);
-  const upvotesPercentage = fetchedData.map(d => d.upvotesPercentage);
-
-  const entries = [
-    {
-      name: 'Comment',
-      count: comments.length,
-      min: min(comments),
-      max: max(comments),
-    },
-    {
-      name: 'Data',
-      count: dataOccurrences.length,
-      min: min(dataOccurrences),
-      max: max(dataOccurrences),
-    },
-    {
-      name: 'Upvotes',
-      count: upvotes.length,
-      min: min(upvotes),
-      max: max(upvotes),
-    },
-    {
-      name: 'UpvotesPercentage',
-      count: upvotesPercentage.length,
-      min: min(upvotesPercentage),
-      max: max(upvotesPercentage),
-    },
-  ];
-
-  console.table(entries, ['name', 'count', 'min', 'max']);
-
-  const datasets = {
-    comments,
-    dataOccurrences,
-    uniqueUsers,
-    upvotes,
-    upvotesPercentage,
-  };
-
-  return datasets;
+  // console.log('barsTransition', barsTransition, 'barsExit', barsExit);
 };
 
 const draw = (selector, fetchedData) => {
-  const datasets = makeDatasets(fetchedData);
   const { axisX, axisY, barsGroup, chart, height, width } = prepareChart(
     selector
   );
@@ -268,22 +221,22 @@ const draw = (selector, fetchedData) => {
   };
 
   select('#dataWord').on('click', () => {
-    drawChart(selections, width, height, datasets, 'dataOccurrences');
+    drawChart(selections, width, height, fetchedData, 'dataOccurrences');
   });
 
   select('#comments').on('click', () => {
-    drawChart(selections, width, height, datasets, 'comments');
+    drawChart(selections, width, height, fetchedData, 'comments');
   });
 
   select('#upvotes').on('click', () => {
-    drawChart(selections, width, height, datasets, 'upvotes');
+    drawChart(selections, width, height, fetchedData, 'upvotes');
   });
 
   select('#upvotesPercentage').on('click', () => {
-    drawChart(selections, width, height, datasets, 'upvotesPercentage');
+    drawChart(selections, width, height, fetchedData, 'upvotesPercentage');
   });
 
-  drawChart(selections, width, height, datasets, 'dataOccurrences');
+  drawChart(selections, width, height, fetchedData, 'dataOccurrences');
 };
 
 export const fn = async (selector, url) => {
