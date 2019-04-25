@@ -1,53 +1,99 @@
-svg {
-  border: 1px solid red;
+/* 
+ * See Bulma's CSS colors.
+ * https://bulma.io/documentation/overview/colors/
+ */
+
+ :root {
+  /* COLORS */
+  --colors-comments: hsl(48, 100%, 67%); /* Bulma's warning */
+  --colors-data-occurrences: hsl(348, 100%, 61%); /* Bulma's danger */
+  --colors-upvotes: hsl(171, 100%, 41%); /* Bulma's primary */
+  --colors-upvotes-percentage: hsl(141, 71%, 48%); /* Bulma's success */
+
+  /* TYPOGRAPHY */
+  --typography-font-family-primary: 'Gugi', cursive;
+  --typography-font-family-secondary: 'Lato', sans-serif;
+  --typography-font-size: 1rem;
 }
 
-.bar {
-  fill: blue;
+/* debug */
+/* svg {
+  border: 3px solid red;
+} */
+
+/* debug */
+/* .viz {
+  outline: 3px solid steelblue;
+} */
+
+
+#root {
+  position: relative;
 }
 
-.bar--highlighted {
-  outline: 5px solid blue;
+button,
+text {
+  font-family: var(--typography-font-family-primary);
+}
+
+h1,
+h2,
+p {
+  font-family: var(--typography-font-family-secondary);
 }
 
 .bar:hover {
+  cursor: pointer;
   fill: white;
 }
 
+.dataOccurrences {
+  background-color: var(--colors-data-occurrences);
+  fill: var(--colors-data-occurrences);
+}
+
+.dataOccurrences:hover {
+  box-shadow: 0 0 1rem 0.5rem var(--colors-data-occurrences);
+}
+
 .comments {
-  fill: red;
+  background-color: var(--colors-comments);
+  fill: var(--colors-comments);
+}
+
+.comments:hover {
+  box-shadow: 0 0 1rem 0.5rem var(--colors-comments);
 }
 
 .upvotes {
-  fill: purple;
+  background-color: var(--colors-upvotes);
+  fill: var(--colors-upvotes);
+}
+
+.upvotes:hover {
+  box-shadow: 0 0 1rem 0.5rem var(--colors-upvotes);
 }
 
 .upvotesPercentage {
-  fill: steelblue;
+  background-color: var(--colors-upvotes-percentage);
+  fill: var(--colors-upvotes-percentage);
 }
 
-.dataOccurrences {
-  fill: green;
-}
-
-.viz {
-  outline: 3px solid darkgray;
+.upvotesPercentage:hover {
+  box-shadow: 0 0 1rem 0.5rem var(--colors-upvotes-percentage);
 }
 
 .axis {
-  font-family: lobster;
-  stroke: black;
+  font-family: var(--typography-font-family-secondary);
 }
 
-.axis-x {
-  font-size: 1rem;
-}
-
+.axis-x,
 .axis-y {
   font-size: 1rem;
 }
 
-.axis-x-text {
+.axis-x-text,
+.axis-y-text {
   font-size: 2rem;
   stroke: black;
 }

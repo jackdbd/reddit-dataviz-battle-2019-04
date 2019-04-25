@@ -1,27 +1,84 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="x-ua-compatible" content="ie=edge" />
-    <title>Reddit data visualization battle April 2019</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="shortcut icon" href="/favicon.ico" />
-    <link
-      href="//fonts.googleapis.com/css?family=Lobster&subset=latin,latin-ext"
-      rel="stylesheet"
-      type="text/css"
-    />
-  <link href="index.css?eed33e6774cab463ac1c" rel="stylesheet"></head>
-  <body>
-    <div class="buttons-container">
-      <div class="buttons">
-        <button id="dataWord">Order by most occurrences of data</button>
-        <button id="comments">Order by most comments</button>
-        <button id="upvotes">Order by most upvotes</button>
-        <button id="upvotesPercentage">Order by highest upvote %</button>
+
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="x-ua-compatible" content="ie=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reddit data visualization battle April 2019</title>
+  <link rel="shortcut icon" href="/favicon.ico" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css">
+  <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+  <link href="//fonts.googleapis.com/css?family=Gugi|Lato" rel="stylesheet" type="text/css" />
+<link href="index.css?2d4b2f5fbbc9b412dec5" rel="stylesheet"></head>
+
+<body>
+  <section class="hero is-fullheight is-dark">
+    <div class="hero-head">
+      <div class="container">
+        <h1 class="title">DataViz Battle for the month of April 2019</h1>
+        <h2 class="subtitle">Visualize the April Fool's Prank</h2>
+        <div>
+          <p>On April 1st, many Reddit users created a new post in the <a
+              href="https://www.reddit.com/r/dataisbeautiful/comments/b8ws37/battle_dataviz_battle_for_the_month_of_april_2019/"
+              target="_blank">/r/DataIsBeautiful</a> subreddit with just the word <em>Data</em> in it.
+          </p>
+          <p>During the day many redditors — sometimes the same users who created the post iself — replied with comments
+            mentioning just the word <em>Data</em>.
+          </p>
+          <p>You can order the data by one of these criteria:</p>
+          <div class="content">
+            <ul>
+              <li>Occurrences of the word <em>Data</em> in the post</li>
+              <li>Number of comments in the post</li>
+              <li>Upvotes received by the post</li>
+              <li>Highest percentage of upvotes in the post</li>
+              <ul>
+          </div>
+        </div>
       </div>
     </div>
-    <div id="root"></div>
-    <!-- bundle.js is injected here by html-webpack-plugin -->
-  <script type="text/javascript" src="index.eed33e6774cab463ac1c.js?eed33e6774cab463ac1c"></script></body>
+    <div class="hero-body">
+      <div class="container">
+        <div class="columns has-text-centered is-mobile">
+          <div class="column">
+            <button id="dataWord" class="button dataOccurrences">Most "Data"</button>
+          </div>
+          <div class="column">
+            <button id="comments" class="button comments">Most comments</button>
+          </div>
+          <div class="column">
+            <button id="upvotes" class="button upvotes">Most upvotes</button>
+          </div>
+          <div class="column">
+            <button id="upvotesPercentage" class="button upvotesPercentage">Most upvote %</button>
+          </div>
+        </div>
+        <div class="columns">
+          <div id="root" class="column is-full"></div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-foot">
+      <div class="container">
+        <footer>
+          <div class="content has-text-centered">
+            <p>
+              <a href="https://bulma.io/made-with-bulma/">
+                <img src="https://bulma.io/images/made-with-bulma.png" alt="Made with Bulma" width="128" height="24">
+              </a>
+              <br>
+              <span>data gathering: <a href="https://pptr.dev/">Puppeteer</a> — </span>
+              <span>data visualization: <a href="https://d3js.org/">D3</a></span>
+              <br>
+              <span><a href="https://github.com/jackdbd/reddit-dataviz-battle-2019-04">Source code</a></span>
+            </p>
+          </div>
+        </footer>
+      </div>
+    </div>
+  </section>
+  <!-- bundle.js is injected here by html-webpack-plugin -->
+<script type="text/javascript" src="index.2d4b2f5fbbc9b412dec5.js?2d4b2f5fbbc9b412dec5"></script></body>
+
 </html>
