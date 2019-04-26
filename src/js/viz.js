@@ -3,7 +3,7 @@ import { max, range } from 'd3-array';
 import { axisBottom, axisLeft } from 'd3-axis';
 import { easeLinear } from 'd3-ease';
 import { scaleBand, scaleLinear } from 'd3-scale';
-import { select, selectAll } from 'd3-selection';
+import { event, select, selectAll } from 'd3-selection';
 import { transition } from 'd3-transition';
 import { encaseP, tryP } from 'fluture';
 
@@ -11,7 +11,9 @@ import '../css/viz.css';
 
 const R = require('ramda');
 
-const NUM_SAMPLES = 15;
+let numSamples = 20;
+const IMG_SIZE = 128;
+const IMG_PLACEHOLDER_URL = `https://bulma.io/images/placeholders/${IMG_SIZE}x${IMG_SIZE}.png`;
 
 const margin = {
   top: 20,
@@ -33,15 +35,26 @@ const transitionToFinalX = (_, i, nodes) => {
     .style('opacity', 1);
 };
 
-const mouseover = (_, i, nodes) => {
-  const selection = select(nodes[i]);
-  selection.classed('bar--highlighted', true);
-};
+const hasImgUrl = str => str.length > 0;
 
-const mouseout = (_, i, nodes) => {
-  const selection = select(nodes[i]);
-  selection.classed('bar--highlighted', false);
-};
+function mouseover(d) {
+  // console.log(d)
+  const { div, img, a } = this;
+  const offsetX = 0.5 * IMG_SIZE;
+  const offsetY = -0.5 * IMG_SIZE;
+
+  div
+    .transition()
+    .duration(200)
+    .style('opacity', 1)
+    .style('left', `${event.layerX + offsetX}px`)
+    .style('top', `${event.layerY + offsetY}px`);
+
+  const src = hasImgUrl(d.imageUrl) ? d.imageUrl : IMG_PLACEHOLDER_URL;
+  img.attr('src', src);
+
+  a.attr('href', src);
+}
 
 /**
  * Prepare the SVG elements and return d3 selections.
@@ -60,6 +73,32 @@ const prepareChart = selector => {
     .attr('height', '100%')
     .attr('viewBox', viewBox)
     .attr('preserveAspectRatio', 'xMinYMin meet');
+
+  const tooltipDiv = selectAll(selector)
+    .append('div')
+    .attr('class', 'tooltip')
+    .style('opacity', 0);
+
+  const tooltipFigure = tooltipDiv
+    .append('figure')
+    .attr('class', 'image is-128x128');
+
+  const tooltipA = tooltipFigure
+    .append('a')
+    .attr('href', IMG_PLACEHOLDER_URL)
+    .attr('target', '_blank')
+    .attr('class', 'content');
+
+  const tooltipImg = tooltipA
+    .append('img')
+    .attr('alt', 'Image posted in the thread')
+    .attr('src', IMG_PLACEHOLDER_URL);
+
+  const tooltipSelections = {
+    a: tooltipA,
+    div: tooltipDiv,
+    img: tooltipImg,
+  };
 
   const chart = svg
     .append('g')
@@ -82,6 +121,7 @@ const prepareChart = selector => {
     axisY,
     barsGroup,
     chart,
+    tooltipSelections,
     height,
     width,
   };
@@ -98,7 +138,7 @@ const updateScales = (data, width, height) => {
     .range([0, width]);
 
   const yScale = scaleBand()
-    .domain(range(NUM_SAMPLES))
+    .domain(range(numSamples))
     .range([0, height])
     .paddingInner(0.05);
 
@@ -118,8 +158,6 @@ const updateAxes = (
   height,
   data
 ) => {
-  const yValues = R.pluck('Post ID')(data);
-
   const xAxisFn = axisBottom().scale(xScale);
   axisX.call(xAxisFn);
 
@@ -143,40 +181,46 @@ const updateAxes = (
     .attr('dy', '-0.5em')
     .style('opacity', 1);
 
+  const yValues = R.pluck('Post ID')(data);
+  const imageUrls = R.pluck('imageUrl')(data);
+
   const yAxisFn = axisLeft()
     .scale(yScale)
     .tickValues(yValues);
 
-  const barHeight = height / NUM_SAMPLES; // not exactly, there is also the padding;
+  const barHeight = height / numSamples; // not exactly, there is also the padding;
 
   axisY
     .call(yAxisFn)
     .selectAll('.tick')
+    .classed(`${chosenDataset}`, (_, i) => hasImgUrl(imageUrls[i]))
     .attr(
       'transform',
       (_, i) => `translate(0, ${i * barHeight + barHeight / 2})`
     );
 
-  const yAxisTextUpdate = axisY.selectAll('text').data([1]);
+  // It's quite problematic to position the Y axis label correctly for all
+  // screen sizes, so I decided to leave it out.
+  // const yAxisTextUpdate = axisY.selectAll('text').data([1]);
 
-  const yAxisTextEnter = yAxisTextUpdate
-    .enter()
-    .append('text')
-    .merge(yAxisTextUpdate)
-    .attr('class', 'axis-y-text')
-    .style('text-anchor', 'middle')
-    .style('opacity', '0.25')
-    .attr(
-      'transform',
-      `rotate(-90) translate(${-height / 2}, -${margin.left * 0.8})`
-    )
-    .text('Post ID');
+  // const yAxisTextEnter = yAxisTextUpdate
+  //   .enter()
+  //   .append('text')
+  //   .merge(yAxisTextUpdate)
+  //   .attr('class', 'axis-y-text')
+  //   .style('text-anchor', 'middle')
+  //   .style('opacity', '0.25')
+  //   .attr(
+  //     'transform',
+  //     `rotate(-90) translate(${-height / 2}, -${margin.left * 0.9})`
+  //   )
+  //   .text('Post ID');
 
-  yAxisTextEnter
-    .transition()
-    .duration(500)
-    .ease(easeLinear)
-    .style('opacity', 1);
+  // yAxisTextEnter
+  //   .transition()
+  //   .duration(500)
+  //   .ease(easeLinear)
+  //   .style('opacity', 1);
 
   selectAll('.axis-y > .tick')
     .style('cursor', 'pointer')
@@ -187,13 +231,14 @@ const updateAxes = (
 };
 
 const drawChart = (selections, width, height, fetchedData, chosenDataset) => {
-  const pickChosen = d => R.pick(['postId', chosenDataset], d);
+  const pickChosen = d => R.pick(['postId', 'imageUrl', chosenDataset], d);
   const arrData = R.map(pickChosen, fetchedData);
   const byChosen = R.descend(R.prop(chosenDataset));
   const arr = R.sort(byChosen, arrData);
 
-  const data = arr.filter((_, i) => i < NUM_SAMPLES);
+  const data = arr.filter((_, i) => i < numSamples);
 
+  // https://github.com/ramda/ramda/wiki/Cookbook#rename-keys-of-an-object
   const renameKeys = R.curry((keysMap, obj) => {
     const fn = (acc, key) => R.assoc(keysMap[key] || key, obj[key], acc);
     return R.reduce(fn, {}, R.keys(obj));
@@ -204,7 +249,7 @@ const drawChart = (selections, width, height, fetchedData, chosenDataset) => {
   const dataRenamed = R.map(renameDatum, data);
 
   const { xScale, yScale } = updateScales(dataRenamed, width, height);
-  const { axisX, axisY, barsGroup } = selections;
+  const { axisX, axisY, barsGroup, tooltipSelections } = selections;
 
   updateAxes(
     xScale,
@@ -229,14 +274,13 @@ const drawChart = (selections, width, height, fetchedData, chosenDataset) => {
     .attr('height', yScale.bandwidth() / 2)
     // gotcha: if you forget to assign the '.bar' class, each time you change
     // dataset the class will change, resulting in an enter selection which will
-    // not merge with the update selection (so you'll end up with NUM_SAMPLES
+    // not merge with the update selection (so you'll end up with num_samples
     // additional rect elements each time you change dataset, instead of
     // replacing older rect elements with newer ones).
     .attr('class', `bar ${chosenDataset}`)
     .style('opacity', 0.25)
     // event listeners must be attached on the enter selection
-    .on('mouseover', mouseover)
-    .on('mouseout', mouseout);
+    .on('mouseover', mouseover.bind(tooltipSelections));
 
   const barsTransition = barsEnter
     // transition each SVG rect to its final width and height, but yet not x.
@@ -246,25 +290,49 @@ const drawChart = (selections, width, height, fetchedData, chosenDataset) => {
     // when the previous transition ends, start a new transition
     .on('end', transitionToFinalX);
 
-  // In the exit selection we don't have anything to remove because all our
-  // datasets have the same number of samples. Note that we still need to merge,
-  // otherwise the selection would be empty.
-
-  const barsExit = barsUpdate.exit().merge(barsUpdate);
+  const barsExit = barsUpdate
+    .exit()
+    .remove('rect')
+    .merge(barsUpdate);
 
   console.log('barsTransition', barsTransition, 'barsExit', barsExit);
 };
 
 const draw = (selector, fetchedData) => {
-  const { axisX, axisY, barsGroup, chart, height, width } = prepareChart(
-    selector
-  );
+  const {
+    axisX,
+    axisY,
+    barsGroup,
+    chart,
+    tooltipSelections,
+    height,
+    width,
+  } = prepareChart(selector);
+
   const selections = {
     axisX,
     axisY,
     barsGroup,
     chart,
+    tooltipSelections,
   };
+
+  const defaultDataset = 'dataOccurrences';
+
+  select('#first-10').on('click', () => {
+    numSamples = 10;
+    drawChart(selections, width, height, fetchedData, defaultDataset);
+  });
+
+  select('#first-20').on('click', () => {
+    numSamples = 20;
+    drawChart(selections, width, height, fetchedData, defaultDataset);
+  });
+
+  select('#first-30').on('click', () => {
+    numSamples = 30;
+    drawChart(selections, width, height, fetchedData, defaultDataset);
+  });
 
   select('#dataWord').on('click', () => {
     drawChart(selections, width, height, fetchedData, 'dataOccurrences');
@@ -282,7 +350,7 @@ const draw = (selector, fetchedData) => {
     drawChart(selections, width, height, fetchedData, 'upvotesPercentage');
   });
 
-  drawChart(selections, width, height, fetchedData, 'dataOccurrences');
+  drawChart(selections, width, height, fetchedData, defaultDataset);
 };
 
 export const fn = async (selector, url) => {

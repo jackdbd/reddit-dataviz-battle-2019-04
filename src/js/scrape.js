@@ -192,7 +192,7 @@ const fn = async () => {
     const entry = {
       comments: result.data.comments,
       dataOccurrences: result.data.dataOccurrences,
-      imageUrl: result.data.imageUrl || "",
+      imageUrl: result.data.imageUrl || '',
       postId: result.postId,
       title: result.title,
       uniqueUsers: result.data.uniqueUsers,

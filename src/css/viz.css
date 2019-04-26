@@ -36,6 +36,10 @@ p {
   fill: var(--colors-data-occurrences);
 }
 
+.dataOccurrences > text {
+  fill: var(--colors-data-occurrences);
+}
+
 .dataOccurrences:hover {
   box-shadow: 0 0 1rem 0.5rem var(--colors-data-occurrences);
 }
@@ -43,6 +47,10 @@ p {
 .comments {
   background-color: var(--colors-comments);
   fill: var(--colors-comments);
+}
+
+.comments > text {
+  fill: var(--colors-data-comments);
 }
 
 .comments:hover {
@@ -54,6 +62,10 @@ p {
   fill: var(--colors-upvotes);
 }
 
+.upvotes > text {
+  fill: var(--colors-data-upvotes);
+}
+
 .upvotes:hover {
   box-shadow: 0 0 1rem 0.5rem var(--colors-upvotes);
 }
@@ -61,6 +73,10 @@ p {
 .upvotesPercentage {
   background-color: var(--colors-upvotes-percentage);
   fill: var(--colors-upvotes-percentage);
+}
+
+.upvotesPercentage > text {
+  fill: var(--colors-data-upvotes-percentage);
 }
 
 .upvotesPercentage:hover {

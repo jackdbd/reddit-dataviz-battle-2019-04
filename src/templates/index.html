@@ -21,8 +21,8 @@
       </div>
     </div>
     <div class="hero-body">
-      <!-- <div class="container"> -->
       <div class="columns">
+        <!-- two columns layout on laptops and desktops. Columns are stacked on mobiles. -->
         <div class="column is-one-third">
           <p>On April 1st, many Reddit users created a new post in the <a class="link"
               href="https://www.reddit.com/r/dataisbeautiful/comments/b8ws37/battle_dataviz_battle_for_the_month_of_april_2019/"
@@ -33,7 +33,10 @@
             mentioning just the word <em>Data</em>.
           </p>
           <br>
-          <p>There are <strong>567</strong> posts in the dataset. You can order the data by one of these criteria:</p>
+          <p>There are <strong>567</strong> posts in the dataset.</p>
+          <p>Colored Y-axis ticks signal that the post contained an image.</p>
+          <hr>
+          <p>You can order the data by one of these criteria:</p>
           <div class="content">
             <ul>
               <li>Occurrences of the word <em>Data</em> in the post</li>
@@ -42,9 +45,19 @@
               <li>Percentage of upvotes received by the post</li>
               <ul>
           </div>
-          <span><em>Click</em> on a y-axis label tick to visit original post on r/dataisbeautiful.</span><br>
-          <span><em>Hover</em> on a bar to see the image included in the post (if available).</span>
+          <div class="is-vcentered">
+            <span><em>Select</em> the first </span>
+            <button id="first-10" class="button is-small is-dark is-outlined is-inverted">10</button>
+            <button id="first-20" class="button is-small is-dark is-outlined is-inverted">20</button>
+            <button id="first-30" class="button is-small is-dark is-outlined is-inverted">30</button>
+            <span>posts.</span>
+            <br>
+          </div>
+          <span><em>Click</em> on a y-axis label tick to visit original post on r/dataisbeautiful.</span>
+          <br>
+          <span><em>Hover</em> on a bar to see the image included in the post.</span>
         </div>
+
         <div class="column">
           <div class="columns has-text-centered">
             <div class="column">
