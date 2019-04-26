@@ -7,8 +7,10 @@
   /* COLORS */
   --colors-comments: hsl(48, 100%, 67%); /* Bulma's warning */
   --colors-data-occurrences: hsl(348, 100%, 61%); /* Bulma's danger */
+  --colors-link: hsl(217, 71%, 53%); /* Bulma's link */
   --colors-upvotes: hsl(171, 100%, 41%); /* Bulma's primary */
   --colors-upvotes-percentage: hsl(141, 71%, 48%); /* Bulma's success */
+  --colors-tooltip-background: hsl(0, 0%, 21%);  /* Bulma's dark */
 
   /* TYPOGRAPHY */
   --typography-font-family-primary: 'Gugi', cursive;
@@ -52,6 +54,10 @@ p {
   fill: var(--colors-data-occurrences);
 }
 
+.dataOccurrences > text {
+  fill: var(--colors-data-occurrences);
+}
+
 .dataOccurrences:hover {
   box-shadow: 0 0 1rem 0.5rem var(--colors-data-occurrences);
 }
@@ -59,6 +65,10 @@ p {
 .comments {
   background-color: var(--colors-comments);
   fill: var(--colors-comments);
+}
+
+.comments > text {
+  fill: var(--colors-data-comments);
 }
 
 .comments:hover {
@@ -70,6 +80,10 @@ p {
   fill: var(--colors-upvotes);
 }
 
+.upvotes > text {
+  fill: var(--colors-data-upvotes);
+}
+
 .upvotes:hover {
   box-shadow: 0 0 1rem 0.5rem var(--colors-upvotes);
 }
@@ -77,6 +91,10 @@ p {
 .upvotesPercentage {
   background-color: var(--colors-upvotes-percentage);
   fill: var(--colors-upvotes-percentage);
+}
+
+.upvotesPercentage > text {
+  fill: var(--colors-data-upvotes-percentage);
 }
 
 .upvotesPercentage:hover {
@@ -89,7 +107,7 @@ p {
 
 .axis-x,
 .axis-y {
-  font-size: 1rem;
+  font-size: 1.5rem;
 }
 
 .axis-x-text,
@@ -101,9 +119,34 @@ p {
 @media only screen and (max-width: 768px) {
   .axis-x-text,
   .axis-y-text {
-  font-size: 1.5rem;
-  stroke: black;
+    font-size: 1.5rem;
+    stroke: black;
+  }
 }
+
+.tooltip {
+  background: var(--colors-tooltip-background);
+  border: 0;
+  border-radius: 0.5rem;
+  font-family: var(--typography-font-family-primary);
+  font-size: 1rem;
+  font-weight: bold;
+  height: auto;
+  /* height: 300px; */
+  padding: 0.5rem;
+  position: absolute;
+  text-align: center;
+  width: auto;
+  /* width: 400px; */
+}
+
+.tooltip:hover {
+  opacity: 0.8;
+}
+
+.link {
+  color: var(--colors-link) !important;
+  text-decoration: underline;
 }
 
 

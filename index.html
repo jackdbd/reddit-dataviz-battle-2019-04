@@ -8,9 +8,9 @@
   <title>Reddit data visualization battle April 2019</title>
   <link rel="shortcut icon" href="/favicon.ico" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css">
-  <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+  <!-- <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script> -->
   <link href="//fonts.googleapis.com/css?family=Gugi|Lato" rel="stylesheet" type="text/css" />
-<link href="index.css?4ac19d3cca00cfca44d3" rel="stylesheet"></head>
+<link href="index.css?1adb1eb9ff2b1fb24a53" rel="stylesheet"></head>
 
 <body>
   <section class="hero is-fullheight is-dark">
@@ -18,46 +18,65 @@
       <div class="container">
         <h1 class="title">DataViz Battle for the month of April 2019</h1>
         <h2 class="subtitle">Visualize the April Fool's Prank</h2>
-        <div>
-          <p>On April 1st, many Reddit users created a new post in the <a
+      </div>
+    </div>
+    <div class="hero-body">
+      <div class="columns">
+        <!-- two columns layout on laptops and desktops. Columns are stacked on mobiles. -->
+        <div class="column is-one-third">
+          <p>On April 1st, many Reddit users created a new post in the <a class="link"
               href="https://www.reddit.com/r/dataisbeautiful/comments/b8ws37/battle_dataviz_battle_for_the_month_of_april_2019/"
-              target="_blank">/r/DataIsBeautiful</a> subreddit with just the word <em>Data</em> in it.
+              target="_blank">r/dataisbeautiful</a> subreddit with just the word <em>Data</em> in it.
           </p>
-          <p>During the day many redditors — sometimes the same users who created the post iself — replied with comments
+          <p>During the day many redditors — sometimes the same users who created the post iself — replied with
+            comments
             mentioning just the word <em>Data</em>.
           </p>
+          <br>
+          <p>There are <strong>567</strong> posts in the dataset.</p>
+          <p>Colored Y-axis ticks signal that the post contained an image.</p>
+          <hr>
           <p>You can order the data by one of these criteria:</p>
           <div class="content">
             <ul>
               <li>Occurrences of the word <em>Data</em> in the post</li>
               <li>Number of comments in the post</li>
               <li>Upvotes received by the post</li>
-              <li>Highest percentage of upvotes in the post</li>
+              <li>Percentage of upvotes received by the post</li>
               <ul>
           </div>
+          <div class="is-vcentered">
+            <span><em>Select</em> the first </span>
+            <button id="first-10" class="button is-small is-dark is-outlined is-inverted">10</button>
+            <button id="first-20" class="button is-small is-dark is-outlined is-inverted">20</button>
+            <button id="first-30" class="button is-small is-dark is-outlined is-inverted">30</button>
+            <span>posts.</span>
+            <br>
+          </div>
+          <span><em>Click</em> on a y-axis label tick to visit original post on r/dataisbeautiful.</span>
+          <br>
+          <span><em>Hover</em> on a bar to see the image included in the post.</span>
+        </div>
+
+        <div class="column">
+          <div class="columns has-text-centered">
+            <div class="column">
+              <button id="dataWord" class="button dataOccurrences">Most "Data"</button>
+            </div>
+            <div class="column">
+              <button id="comments" class="button comments">Most comments</button>
+            </div>
+            <div class="column">
+              <button id="upvotes" class="button upvotes">Most upvotes</button>
+            </div>
+            <div class="column">
+              <button id="upvotesPercentage" class="button upvotesPercentage">Most upvote %</button>
+            </div>
+          </div>
+          <div id="root"></div>
         </div>
       </div>
-    </div>
-    <div class="hero-body">
-      <div class="container">
-        <div class="columns has-text-centered">
-          <div class="column">
-            <button id="dataWord" class="button dataOccurrences">Most "Data"</button>
-          </div>
-          <div class="column">
-            <button id="comments" class="button comments">Most comments</button>
-          </div>
-          <div class="column">
-            <button id="upvotes" class="button upvotes">Most upvotes</button>
-          </div>
-          <div class="column">
-            <button id="upvotesPercentage" class="button upvotesPercentage">Most upvote %</button>
-          </div>
-        </div>
-        <div class="columns">
-          <div id="root" class="column is-full"></div>
-        </div>
-      </div>
+      <!-- </div> -->
     </div>
     <div class="hero-foot">
       <div class="container">
@@ -68,10 +87,10 @@
                 <img src="https://bulma.io/images/made-with-bulma.png" alt="Made with Bulma" width="128" height="24">
               </a>
               <br>
-              <span>data gathering: <a href="https://pptr.dev/">Puppeteer</a> — </span>
-              <span>data visualization: <a href="https://d3js.org/">D3</a></span>
-              <br>
-              <span><a href="https://github.com/jackdbd/reddit-dataviz-battle-2019-04">Source code</a></span>
+              <span>data gathering: <a class="link" href="https://pptr.dev/">Puppeteer</a> — </span>
+              <span>data visualization: <a class="link" href="https://d3js.org/">D3</a> — </span>
+              <span>source code <a class="link"
+                  href="https://github.com/jackdbd/reddit-dataviz-battle-2019-04">here</a></span>
             </p>
           </div>
         </footer>
@@ -79,6 +98,6 @@
     </div>
   </section>
   <!-- bundle.js is injected here by html-webpack-plugin -->
-<script type="text/javascript" src="index.4ac19d3cca00cfca44d3.js?4ac19d3cca00cfca44d3"></script></body>
+<script type="text/javascript" src="index.1adb1eb9ff2b1fb24a53.js?1adb1eb9ff2b1fb24a53"></script></body>
 
 </html>
