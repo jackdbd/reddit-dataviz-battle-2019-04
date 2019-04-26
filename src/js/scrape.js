@@ -182,7 +182,7 @@ const fn = async () => {
   const threadUrls = await page.$eval('pre', el => el.innerHTML.split('\n'));
 
   console.log(chalk.green(`Found ${threadUrls.length} Thread URLs`));
-  // const urls = threadUrls.filter((d, i) => i < 3 || i === 566);
+  // const urls = threadUrls.filter((d, i) => i === 406 || i === 407) || i === 566;
   const urls = threadUrls;
 
   const entries = [];
@@ -192,7 +192,7 @@ const fn = async () => {
     const entry = {
       comments: result.data.comments,
       dataOccurrences: result.data.dataOccurrences,
-      imageUrl: result.data.imageUrl,
+      imageUrl: result.data.imageUrl || "",
       postId: result.postId,
       title: result.title,
       uniqueUsers: result.data.uniqueUsers,
