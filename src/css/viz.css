@@ -73,7 +73,7 @@ p {
 
 .axis-x,
 .axis-y {
-  font-size: 1rem;
+  font-size: 1.5rem;
 }
 
 .axis-x-text,
@@ -85,7 +85,32 @@ p {
 @media only screen and (max-width: 768px) {
   .axis-x-text,
   .axis-y-text {
-  font-size: 1.5rem;
-  stroke: black;
+    font-size: 1.5rem;
+    stroke: black;
+  }
 }
+
+.tooltip {
+  background: var(--colors-tooltip-background);
+  border: 0;
+  border-radius: 0.5rem;
+  font-family: var(--typography-font-family-primary);
+  font-size: 1rem;
+  font-weight: bold;
+  height: auto;
+  /* height: 300px; */
+  padding: 0.5rem;
+  position: absolute;
+  text-align: center;
+  width: auto;
+  /* width: 400px; */
+}
+
+.tooltip:hover {
+  opacity: 0.8;
+}
+
+.link {
+  color: var(--colors-link) !important;
+  text-decoration: underline;
 }

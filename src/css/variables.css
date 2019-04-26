@@ -7,8 +7,10 @@
   /* COLORS */
   --colors-comments: hsl(48, 100%, 67%); /* Bulma's warning */
   --colors-data-occurrences: hsl(348, 100%, 61%); /* Bulma's danger */
+  --colors-link: hsl(217, 71%, 53%); /* Bulma's link */
   --colors-upvotes: hsl(171, 100%, 41%); /* Bulma's primary */
   --colors-upvotes-percentage: hsl(141, 71%, 48%); /* Bulma's success */
+  --colors-tooltip-background: hsl(0, 0%, 21%);  /* Bulma's dark */
 
   /* TYPOGRAPHY */
   --typography-font-family-primary: 'Gugi', cursive;
